@@ -44,7 +44,6 @@ def new_corpus_process(new_corpus_json):
     corpus_key_loaded = esdocs.insert_one(new_corpus_json).inserted_id
     es_index_create(new_corpus_json['files_location'], 
                     new_corpus_json['index_1_names'],
-                    new_corpus_json['index_2_names'],
                     new_corpus_json['pre_processor'])
     return "Successful"
 

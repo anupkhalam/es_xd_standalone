@@ -18,21 +18,20 @@ from preprocessor_collection import *
 
 
 def es_index_create(files_location,                                 # location of html files
-                    index_1_names,                                  # name of index 1
-                    index_2_names,                                  # name of index 2
+                    index_1_params,                                 # name of index 1
                     pre_processor):                                 # preprocessor
     file_list = glob.glob(files_location + '/*.html')
+    file_names = [filename.split("/")[-1][:-5] for filename in file_list]
     # this should come as an argument or from db
-    headers_list = ['h1','h2','h3','h4','h5']
+    headers_list = ['h1','h2']
 
 
     # create index in elasticsearch with necessary field limit
     es = Elasticsearch()                                            # initialize elasticsearch
     doc = {"settings": {"index.mapping.total_fields.limit": 10000}} # setting the field limit
-    es.indices.create(index = index_1_names[0], body = doc)
-    es.indices.create(index = index_2_names[0], body = doc)
+    es.indices.create(index = index_1_params[0], body = doc)
 
-
+    es_doc_id = 0
     for file_no in range(len(file_list)):
         with open(file_list[file_no]) as f:
             temp_html_file = [line.rstrip() for line in f]
@@ -49,23 +48,20 @@ def es_index_create(files_location,                                 # location o
         # extract whole text from html
         section_dict_full_text = text_extraction(BS(html))
         
-        # extract user-specified header levels
-        section_dict_headers = header_extraction(BS(html), headers_list)
-
         # extract contents under the headers
-        section_dict_headers_contents = header_content_extraction(html, headers_list)
+        section_dict_headers_contents = header_content_extraction(html,headers_list,file_names[file_no])
 
-        # assembling contents for the first index
-        section_dict_1 = {**section_dict_headers, **section_dict_full_html}
+        # assembling contents for the index
+        section_dict_1 = {**section_dict_full_text, **section_dict_headers_contents}
 
-        # assembling contents for the second index
-        section_dict_2 = {**section_dict_full_text, **section_dict_headers_contents}
+        for key, value in section_dict_1.items():
+            section_dict_1[key] = EsPreProcessor.es_preprocessor_manager(value, pre_processor).es_pre_processed_corpus
 
-        for key, value in section_dict_2.items():
-            section_dict_2[key] = EsPreProcessor.es_preprocessor_manager(value, pre_processor).es_pre_processed_corpus
-
-        es.index(index=index_1_names[0], doc_type=index_1_names[1], id=(file_no + 1), body = section_dict_1)
-        es.index(index=index_2_names[0], doc_type=index_2_names[1], id=(file_no + 1), body = section_dict_2)
+        for key, value in section_dict_1.items():
+            es_doc_id += 1
+            es_update_dict = {}
+            es_update_dict[key] = value
+            es.index(index=index_1_params[0], doc_type=index_1_params[1], id=es_doc_id, body = es_update_dict)
 
 
 def es_search_processor(es_sch_doctype, 
