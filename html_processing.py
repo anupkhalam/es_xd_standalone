@@ -51,7 +51,7 @@ def header_content_extraction(html,
             for header_tag_sibling in header_tag_siblings:
                 if header_tag_sibling.name in (headers_list[:(header + 1)]):
                     if header_tag_sibling_list:
-                        section_dict['(' + 'File Name: ' + file_name + ')' + '***'+ '('  + 'File Section: ' + component_tag.get_text().replace('.','_') + ')'] = ' '.join(header_tag_sibling_list)
+                        section_dict["{'file_name':'" + file_name + "','file_section':'" + component_tag.get_text().replace('.','_') + "'}"] = ' '.join(header_tag_sibling_list)
                     break
                 try:
                     header_tag_sibling_tag_list.append(header_tag_sibling)
@@ -60,7 +60,7 @@ def header_content_extraction(html,
                     pass
             else:
                 if header_tag_sibling_list:
-                    section_dict['(' + 'File Name: ' + file_name + ')' + '***'+ '('  + 'File Section: ' + component_tag.get_text().replace('.','_') + ')'] = ' '.join(header_tag_sibling_list)
+                    section_dict["{'file_name':'" + file_name + "','file_section':'" + component_tag.get_text().replace('.','_') + "'}"] = ' '.join(header_tag_sibling_list)
     
     return section_dict
 
